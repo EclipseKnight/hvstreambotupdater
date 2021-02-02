@@ -17,6 +17,7 @@ public class Updater {
 	public static String cwd = System.getProperty("user.dir");
 	public static String latestReleasePath = "https://github.com/EclipseKnight/hvstreambot/releases/latest/download/hvstreambot.jar";
 	public static String botPath = cwd + File.separator + "hvstreambot.jar";
+	public static String startPath = cwd + File.separator + "start.bat";
 	public static String os = System.getProperty("os.name").toLowerCase();
 	
 	public static void main(String[] args) {
@@ -28,7 +29,14 @@ public class Updater {
 			return;
 		}
 		
+		// Grabs latest release
 		if ("--update".equals(args[0])) {
+			getLatestReleaseJar();
+			System.exit(0);
+		}
+		
+		// Grabs latest release and runs in new window.
+		if ("--update-run".equals(args[0])) {
 			getLatestReleaseJar();
 			update();
 		}
@@ -44,7 +52,7 @@ public class Updater {
 			ReadableByteChannel rbc = Channels.newChannel(new URL(latestReleasePath).openStream());
 			
 			FileOutputStream fos = new FileOutputStream(new File(cwd + File.separator + "hvstreambot.jar"));
-			fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+			Logger.log(Level.SUCCESS, fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE) + "");
 			
 			fos.close();
 			rbc.close();
@@ -64,16 +72,26 @@ public class Updater {
 			Logger.log(Level.INFO, "Detected OS: " + os);
 			
 			if (os.contains("win")) {
-				processBuilder.command("cmd", "/c", "start", "cmd.exe", "/c", "java", "-jar", botPath);
+				Logger.log(Level.INFO, "Starting bot...");
+				processBuilder.command("cmd", "/k", "start", "cmd.exe", "/c", "java", "-jar", botPath);
 			}
 			
 			if (os.contains("linux")) {
+				Logger.log(Level.INFO, "Starting bot...");
 				processBuilder.command("gnome-terminal", "--", "java", "-jar", botPath);
 			}
 			
 			if (os.contains("mac")) {
+				Logger.log(Level.INFO, "Starting bot...");
 				processBuilder.command("/bin/bash", "-c", "java", "-jar", botPath);
 			}
+			
+//			try {
+//				Logger.log(Level.INFO, "waiting a couple seconds for bot to go offline...");
+//				Thread.sleep(2000);
+//			} catch (InterruptedException e1) {
+//				e1.printStackTrace();
+//			}
 			
 			try {
 				processBuilder.start();
@@ -83,8 +101,7 @@ public class Updater {
 			}
 			
 		});
-		
 		Runtime.getRuntime().addShutdownHook(updateHook);
-		System.exit(100);
+		System.exit(0);
 	}
 }
